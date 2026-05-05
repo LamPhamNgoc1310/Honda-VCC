@@ -1,13 +1,15 @@
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
 class Settings(BaseSettings):
     # Database
-    mongo_url: str = "mongodb+srv://CamAI_DB:Xinhzai1102%40%40@cluster0.1xazymq.mongodb.net/"
+    mongo_url: str=os.getenv("MONGO_URL")
+    mongo_db: str=os.getenv("MONGO_DB")
+    # mongo_url: str = "mongodb+srv://CamAI_DB:Xinhzai1102%40%40@cluster0.1xazymq.mongodb.net/"
     # mongo_url: str = "mongodb://localhost:27017"
-    mongo_db: str = "CamAI_Honda"
     
     # JWT
     jwt_secret: str = "your-secret-key"
