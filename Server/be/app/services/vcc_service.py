@@ -43,7 +43,7 @@ DEFAULT_CARRIAGES = [
     {"carriage": 4.2, "slot": 5, "node_id": 40000130, "status": "shelf"},
 ]
 
-class VHL_Service:
+class vcc_service:
     def __init__(self) -> None:
         self._consumer_task: Optional[asyncio.Task] = None
         self.current_robot_state = ""
@@ -232,4 +232,4 @@ class VHL_Service:
         logger.info(f"Loaded {len(all_data)} slots for carriages: {carriages_to_fix}")
         return all_data
 
-vhl_service = VHL_Service()
+vcc_service = vcc_service()

@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared import setup_logger
 import asyncio
 from app.core.config import settings
-from app.api import auth, users, permissions, agv_dashboard, websocket, node, roles, area, caller, notification, camera, task_status, monitor, route, agv_websocket, vhl_api
+from app.api import auth, users, permissions, agv_dashboard, websocket, node, roles, area, caller, notification, camera, task_status, monitor, route, agv_websocket, vcc_api, vhl_api
 from app.core.database import connect_to_mongo, close_mongo_connection
 from app.scheduler.agv_scheduler import start_scheduler as start_agv_scheduler, shutdown_scheduler as shutdown_agv_scheduler
 from app.scheduler.clean_up_scheduler import start_scheduler as start_cleanup_scheduler, shutdown_scheduler as shutdown_cleanup_scheduler
@@ -31,7 +31,7 @@ from app.services.heartbeat_service import websocket_heartbeat_service
 from app.services.task_service import task_service
 from app.services.websocket_service import manager as websocket_manager
 from app.services.modbusTCP_service import modbus_device_manager
-from app.services.VHL_service import vhl_service
+# from app.services.VHL_service import vhl_service
 
 logger = setup_logger("camera_ai_app", "INFO", "app")
 
@@ -66,7 +66,7 @@ async def lifespan(app: FastAPI):
     logger.info("Heartbeat service started")
     await modbus_device_manager.start()
     logger.info("Modbus device manager started")
-    await vhl_service.start()
+    # await vhl_service.start()
     logger.info("VHL service started")
 
     try:
@@ -97,7 +97,7 @@ async def lifespan(app: FastAPI):
 
     await modbus_device_manager.stop()
     logger.info("Modbus device manager stopped")
-    await vhl_service.stop()
+    # await vhl_service.stop()
     logger.info("VHL service stopped")
     
     # 4. Dừng scheduler (đợi jobs đang chạy hoàn thành với timeout)
@@ -152,7 +152,7 @@ app.include_router(update_part_log_router, prefix="/api", tags=["Update Part Wit
 app.include_router(maintenance_check_router, prefix="/api", tags=["Maintenance Check"])
 app.include_router(update_amr_name_router, prefix="/api", tags=["Update AMR Name"])
 #API monitor
-
+app.include_router(vcc_api.router, prefix="/vcc", tags=["Update Point API Test"])
 
 app.include_router(pdf_router, tags=["PDF"])
 app.include_router(notification.router, tags=["Notification"])
@@ -173,7 +173,9 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "main:app",
-        host=settings.app_host,
-        port=settings.app_port,
+        # host=settings.app_host,
+        # port=settings.app_port,
+        host="192.168.1.204",
+        port=6868,
         reload=settings.app_debug
     )

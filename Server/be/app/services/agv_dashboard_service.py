@@ -5,6 +5,7 @@ from shared.logging import get_logger
 from typing import Optional
 import httpx
 from app.services.VHL_service import vhl_service
+from app.services.vcc_service import vcc_service
 from app.core.config import settings
 import requests
 

@@ -18,6 +18,7 @@ import Area from "./pages/Area.jsx";
 import WarehouseMap from "./pages/WarehouseMap.jsx";
 import CallerWE from "./pages/CallerWE.jsx";
 import VHLInterface from "./pages/VHLInterface.jsx";
+import VCCInterface from "./pages/VCCInterface.jsx";
 
 const withPrivate = (element, requiredRole) => (
   <PrivateRoute requiredRole={requiredRole}>{element}</PrivateRoute>
@@ -49,6 +50,10 @@ const routes = [
   {
     path: "/caller-we",
     element:<CallerWE />,
+  },
+  {
+    path: "/vcc-interface",
+    element: <VCCInterface />
   },
   {
     path: "/vhl-interface",

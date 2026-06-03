@@ -3,7 +3,7 @@
  * Cấu hình API_BASE qua biến môi trường VITE_VHL_API_BASE trong file .env
  * Mặc định: http://192.168.50.18:9998
  */
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://192.168.50.18:6868').replace(/\/+$/, '') + '/vhl'
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://192.168.50.18:6868').replace(/\/+$/, '') + '/vcc'
 
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}))
@@ -43,7 +43,7 @@ export async function getCarriages() {
 }
 
 export async function moveToPoint({start_point, target_point, move_mode}) {
-  const res = await fetch(`${API_BASE}/moves`, {
+  const res = await fetch(`${API_BASE}/move-to-point`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({start_point, target_point, move_mode}),

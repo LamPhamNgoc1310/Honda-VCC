@@ -19,6 +19,20 @@ async def add_task(payload):
         logger.error(f"Error calling process caller: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
+async def moveToPoint(
+    start_point: int,
+    target_point: int,
+    move_mode: str="rack_supply"
+) -> dict:
+    orderId = f"move-{time.strftime('%H%M%S-%d%m%Y')}-{str(uuid.uuid4())[:4]}"
+    payload = {
+        "moveMode": move_mode,
+        "fromSystem": "Thadosoft",
+        "orderId": orderId,
+        "taskOrderDetail": [{"taskPath": f"{start_point}, {target_point}"}], 
+    }
+    await add_task(payload)
+
 async def request_RCS(data):
     payload = None
     if len(data) == 2:
