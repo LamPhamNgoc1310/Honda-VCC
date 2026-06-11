@@ -3,10 +3,53 @@ from app.core.config import settings
 import time
 import uuid
 from fastapi import HTTPException
-import httpx
 
 logger = get_logger("logic_service")
 ics_url = f"http://192.168.1.100:7000"
+
+from datetime import datetime, timezone
+
+async def get_possible_targets(start_point: int) -> dict:
+    # Phase 1: Mocking the data with the new common fields and status
+    mock_response = {
+        "start_point": start_point,
+        "time": datetime.now(timezone.utc),
+        "possible_targets": [
+            {
+                "zone": 1,
+                "points": [
+                    {
+                        "point_id": 10001234,
+                        "node_name": "Rack-A1",
+                        "status": "empty",
+                        "node_type": "storage",
+                        "distance": 234.0
+                    },
+                    {
+                        "point_id": 10005678,
+                        "node_name": "Rack-A2",
+                        "status": "empty",  
+                        "node_type": "storage",
+                        "distance": 345.5
+                    }
+                ]
+            },
+            {
+                "zone": 2,
+                "points": [
+                    {
+                        "point_id": 10009999,
+                        "node_name": "Supply-B1",
+                        "status": "shelf",
+                        "node_type": "supply",
+                        "distance": 500.0
+                    }
+                ]
+            }
+        ]
+    }
+    
+    return mock_response
 
 async def add_task(payload):
     try:    

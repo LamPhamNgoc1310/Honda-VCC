@@ -7,8 +7,9 @@
 from shared.logging import get_logger
 from fastapi import APIRouter, Request, HTTPException, Query, Body
 import os
-from app.services.vcc_logic import moveToPoint  # example name
-from app.schemas.move_to_point import MoveToPointSchema
+from app.services.vcc_logic import moveToPoint, get_possible_targets  # example name
+from schemas.TargetPointSchema import MoveToPointSchema, PossibleTargetsResponse
+
 logger = get_logger("camera_ai_app")
 ics_url = os.getenv("ICS_URL")
 
@@ -36,3 +37,17 @@ async def create_task(body: MoveToPointSchema):
     except Exception as e:
         logger.error(f"Error updating point status: {str(e)}")
         raise HTTPException(status_code=500, detail="Server???")
+    
+@router.get("/possible-targets/{start_point}", response_model=PossibleTargetsResponse)
+async def fetch_possible_targets(start_point: int):
+    """
+    Phase 1 Endpoint: Get all possible target points for a given start point, 
+    grouped by descending priority zones.
+    """
+    try:
+        # Call the logic layer to fetch and format the zone data
+        result = await get_possible_targets(start_point)
+        return result
+    except Exception as e:
+        logger.error(f"Error fetching target points for start_point {start_point}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
