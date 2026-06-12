@@ -51,4 +51,16 @@ class PossibleTargetsResponse(BaseModel):
 class MoveToPointSchema(BaseModel):
     start_point: int
     target_point: int
-    move_mode: str = "rack_supply"
+    move_mode: str = "to_rack"
+
+class PointUpdateSchema(BaseModel):
+    zone: Optional[str]=None
+    status: Optional[str]=None
+
+class StartPointSchema(BaseModel):
+    start_point: int
+    move_mode: str = "to_rack"
+
+class PointSchema(BaseModel):
+    point: int
+    zone: str
