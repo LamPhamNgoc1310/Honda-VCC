@@ -21,15 +21,29 @@ maps_collection = db.get_collection("maps")
 from datetime import datetime, timezone
 
 async def get_possible_targets(start_point: int, move_mode: str) -> dict:
-    projection =  {"data.nodeArr": 1}
-    map_document = await maps_collection.find_one({"area_id": 1}, projection)
-    
-    if not map_document:
-        return {"error": "No map found for this area."}
+    zone_priority = ["1.2", "1.1", "2.1", "1.5"] 
+
+    try:
+        cursor = points_collection.find({"status": "empty"}, {"_id": 0})
         
-    data_object = map_document.get("data", {}).get("nodeArr", {})
-    
-    return {"nodes": data_object}
+        empty_points = []
+        async for point in cursor:
+            empty_points.append(point)
+
+        if not empty_points:
+            return {"message": "No empty points available", "data": []}
+
+        empty_points.sort(
+            key=lambda p: zone_priority.index(p["zone"]) if p["zone"] in zone_priority else 999
+        )
+        return {
+            "message": "Possible targets found", 
+            "total": len(empty_points), 
+            "data": empty_points
+        }
+
+    except Exception as e:
+        return {"error": f"Database error: {str(e)}"}
 
 #12/06/2026
 async def create_new_point(new_point: int, zone: str) -> dict:

@@ -93,21 +93,23 @@ async def update_point(point_id: int, body: PointUpdateSchema):
 @router.post("/possible-targets")
 async def return_possible_targets(body: StartPointSchema):
     """
-    Example:
+    Example Payload:
     {
         "start_point": 10003324,
         "move_mode": "to_rack" 
     }
     """
-    start_point = body.start_point
-    move_mode = body.move_mode
-
     try:
-        # Call the logic layer to fetch and format the zone data
-        result = await get_possible_targets(start_point, move_mode)
+        result = await get_possible_targets(body.start_point, body.move_mode)
+        
+        if "error" in result:
+            logger.error(f"Error fetching targets: {result['error']}")
+            raise HTTPException(status_code=500, detail=result["error"])
+            
         return result
         
+    except HTTPException:
+        raise
     except Exception as e:
-        # Using logger.exception so you can see the full traceback if it fails!
-        logger.exception(f"Error fetching target points for start_point {start_point}")
+        logger.exception("Unexpected error calculating possible targets")
         raise HTTPException(status_code=500, detail="Server error processing targets")
