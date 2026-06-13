@@ -1,2 +1,6 @@
 caller-env
 be-test
+Server/fe/node_modules
+.env.development
+logs
+dist

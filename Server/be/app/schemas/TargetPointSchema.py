@@ -33,7 +33,34 @@ class PointValidationResponse(BaseModel):
     class Config:
         populate_by_name = True
 
+class TargetPointInfo(BaseModel):
+    point_id: int = Field(..., description="The physical ID of the target point")
+    status: str = Field(..., description="Current status of the slot (e.g., 'empty', 'shelf')")
+    node_type: str = Field(..., description="Functional type of the point (e.g., 'storage', 'supply')")
+
+class TargetZone(BaseModel):
+    is_filled: bool = Field(..., description="The status of a point")
+    zone: int = Field(..., description="Priority zone ranking (e.g., 1 is highest)")
+    points: List[TargetPointInfo] = Field(..., description="List of available points in this zone")
+
+class PossibleTargetsResponse(BaseModel):
+    start_point: int
+    time: datetime
+    possible_targets: List[TargetZone]
+
 class MoveToPointSchema(BaseModel):
     start_point: int
     target_point: int
-    move_mode: str = "rack_supply"
+    move_mode: str = "to_rack"
+
+class PointUpdateSchema(BaseModel):
+    zone: Optional[str]=None
+    status: Optional[str]=None
+
+class StartPointSchema(BaseModel):
+    start_point: int
+    move_mode: str = "to_rack"
+
+class PointSchema(BaseModel):
+    point: int
+    zone: str
