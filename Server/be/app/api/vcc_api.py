@@ -8,6 +8,7 @@ from app.services.vcc_logic import moveToPoint, get_possible_targets, create_new
 from schemas.TargetPointSchema import MoveToPointSchema, PossibleTargetsResponse, StartPointSchema, PointSchema, PointUpdateSchema
 import dotenv
 from dotenv import load_dotenv
+from app.services.vcc_service import vcc_service
 
 load_dotenv()
 logger = get_logger("camera_ai_app")

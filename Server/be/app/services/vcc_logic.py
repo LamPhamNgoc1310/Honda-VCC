@@ -7,6 +7,7 @@ import os
 import pymongo
 from pymongo import AsyncMongoClient
 from dotenv import load_dotenv
+from app.services.vcc_service import vcc_service
 
 load_dotenv()
 
@@ -26,24 +27,37 @@ async def get_possible_targets(start_point: int, move_mode: str) -> dict:
     try:
         cursor = points_collection.find({"status": "empty"}, {"_id": 0})
         
-        empty_points = []
-        async for point in cursor:
-            empty_points.append(point)
+        empty_points = await cursor.to_list(length=None)
 
-        if not empty_points:
+        #Searching the priority zone before reaching the nearest point
+        list_priority = []
+        selected_zone = None
+        for zone in zone_priority:
+            list_priority = [p.get("point") for p in empty_points if p.get("zone") == zone]
+            if list_priority:
+                selected_zone = zone
+                break
+
+        if not list_priority:
+            logger.info("Don't have any empty point to move")
             return {"message": "No empty points available", "data": []}
 
-        empty_points.sort(
-            key=lambda p: zone_priority.index(p["zone"]) if p["zone"] in zone_priority else 999
-        )
+        #Selecting the nearest point from the list of priority
+        if selected_zone != 3:
+            selected_point = vcc_service.find_nearest(start_point, list_priority)
+            if not selected_point:
+                logger.info("Don't have any nearest point to move")
+                return {"message": "No nearest point available", "data": []}
+
         return {
             "message": "Possible targets found", 
-            "total": len(empty_points), 
-            "data": empty_points
+            "nearest_point": selected_point
         }
 
     except Exception as e:
         return {"error": f"Database error: {str(e)}"}
+
+async def 
 
 #12/06/2026
 async def create_new_point(new_point: int, zone: str) -> dict:
@@ -79,6 +93,7 @@ async def get_all_points():
         points_list = []
         async for point in all_points:
             points_list.append(point)
+
 
         return {"message": "Success", "total": len(points_list), "data": points_list}
     except Exception as e:
@@ -140,10 +155,6 @@ async def moveToPoint(
         "target_point": target_point,
         "move_mode": move_mode,
     }
-
-
-
-
 
 
 # mock_response = {
