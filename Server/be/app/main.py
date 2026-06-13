@@ -32,6 +32,7 @@ from app.services.task_service import task_service
 from app.services.websocket_service import manager as websocket_manager
 from app.services.modbusTCP_service import modbus_device_manager
 # from app.services.VHL_service import vhl_service
+from app.services.vcc_service import vcc_service
 
 logger = setup_logger("camera_ai_app", "INFO", "app")
 
@@ -66,6 +67,8 @@ async def lifespan(app: FastAPI):
     logger.info("Heartbeat service started")
     await modbus_device_manager.start()
     logger.info("Modbus device manager started")
+    await vcc_service.start()
+    logger.info("VCC service started")
     # await vhl_service.start()
     logger.info("VHL service started")
 
@@ -97,6 +100,8 @@ async def lifespan(app: FastAPI):
 
     await modbus_device_manager.stop()
     logger.info("Modbus device manager stopped")
+    await vcc_service.stop()
+    logger.info("VCC service stopped")
     # await vhl_service.stop()
     logger.info("VHL service stopped")
     
@@ -173,9 +178,9 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "main:app",
-        # host=settings.app_host,
-        # port=settings.app_port,
-        host="192.168.1.204",
-        port=6868,
+        host=settings.app_host,
+        port=settings.app_port,
+        # host="192.168.1.204",
+        # port=6868,
         reload=settings.app_debug
     )

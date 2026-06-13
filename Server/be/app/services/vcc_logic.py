@@ -5,7 +5,7 @@ import uuid
 from fastapi import HTTPException
 import httpx
 
-logger = get_logger("logic_service")
+logger = get_logger("camera_ai_app")
 ics_url = f"http://192.168.1.100:7000"
 
 async def add_task(payload):

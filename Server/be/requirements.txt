@@ -23,9 +23,14 @@ pytest==8.3.3
 pytest-asyncio==0.24.0
 httpx[http2]==0.27.0
 
-# --- Video ---
+# --- Video & ML ---
 opencv-python==4.11.0.86
 numpy==1.26.4
+ultralytics==8.4.66           # YOLO object detection
+
+# --- HTTP & Industrial ---
+requests==2.34.2              # HTTP client
+pymodbus==3.13.0              # Modbus TCP
 
 # --- Date utilities ---
 python-dateutil==2.8.2
