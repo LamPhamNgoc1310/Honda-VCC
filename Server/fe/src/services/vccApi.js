@@ -42,6 +42,15 @@ export async function getCarriages() {
   return handleResponse(res)
 }
 
+/** Lấy danh sách ô kho (sort row → column) */
+export async function getWarehouse() {
+  const res = await fetch(`${API_BASE}/warehouse`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  })
+  return handleResponse(res)
+}
+
 export async function moveToPoint({start_point, target_point, move_mode}) {
   const res = await fetch(`${API_BASE}/move-to-point`, {
     method: 'POST',
