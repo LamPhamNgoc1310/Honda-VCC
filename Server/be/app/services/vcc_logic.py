@@ -7,6 +7,7 @@ import os
 import pymongo
 from pymongo import AsyncMongoClient
 from dotenv import load_dotenv
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -16,9 +17,6 @@ client = AsyncMongoClient(os.getenv("MONGO_URL"))
 db = client.get_database("test_caller")
 points_collection= db.get_collection("points")
 maps_collection = db.get_collection("maps")
-
-
-from datetime import datetime, timezone
 
 async def get_possible_targets(start_point: int, move_mode: str) -> dict:
     zone_priority = ["1.2", "1.1", "2.1", "1.5"] 
@@ -45,7 +43,6 @@ async def get_possible_targets(start_point: int, move_mode: str) -> dict:
     except Exception as e:
         return {"error": f"Database error: {str(e)}"}
 
-#12/06/2026
 async def create_new_point(new_point: int, zone: str) -> dict:
     now = datetime.now(timezone.utc)
     current_user = "admin_user"

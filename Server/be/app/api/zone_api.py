@@ -1,0 +1,86 @@
+from dataclasses import asdict
+from typing import Any
+
+from shared.logging import get_logger
+from fastapi import APIRouter, HTTPException
+import os
+from app.services.vcc_logic import moveToPoint, get_possible_targets, create_new_point, get_all_points, update_point_data  # example name
+from schemas.TargetPointSchema import MoveToPointSchema, PossibleTargetsResponse, StartPointSchema, PointSchema, PointUpdateSchema
+from schemas.ZoneSchema import BaseZoneSchema, ZoneUpdate
+from app.services.vcc_service import vcc_service
+from app.services.zone_service import createZone, updateZoneById, getAllZones, getZoneById, deleteZoneById
+import dotenv
+from dotenv import load_dotenv
+
+load_dotenv()
+logger = get_logger("camera_ai_app")
+ics_url = os.getenv("ICS_URL")
+router = APIRouter()
+
+@router.post("/create-zone", status_code=200)
+async def create_zone(body: BaseZoneSchema):
+    """
+    Example:
+    {
+        "source_zone": "1.1",
+        "move_mode": "to_rack",
+        "priorities": [
+            { "target_zone": "1.2", "weight": 1 },
+            { "target_zone": "4", "weight": 2 },
+            { "target_zone": "6", "weight": 3 }
+        ]
+    }
+    """
+    
+    result = await createZone(body.model_dump())
+    
+    return {"message": result}
+
+@router.get("/get-all-zones", status_code=200)
+async def get_all_zones(body: BaseZoneSchema):
+    result = await getAllZones()
+    return result
+
+@router.get("/get-zone-by-id/{zone_id}")
+async def get_zone_by_id(zone_id: int):
+    result = await getZoneById(zone_id)
+    return result
+
+@router.put("/update-zone-by-id/{zone_id}")
+async def update_zone_by_id(zone_id: int, body: ZoneUpdate):
+    """
+    Example: 
+    {
+        zone_id: 69
+    }
+    """
+    updated_data = body.model_dump(exclude_unset=True)
+    
+    if not updated_data:
+        return {"message": "The field is empty."}
+    
+    try:
+        result = await updateZoneById(zone_id, updated_data)
+        return result
+        
+    except Exception as e:
+        return {"message": str(e)}
+
+@router.put("/delete-zone-by-id/{zone_id}")
+async def delete_zone_by_id(zone_id: int, body: ZoneUpdate):
+    """
+    Example:
+    {
+        zone_id: 45,
+        is_active: False,
+        is_deleted: True
+    }
+    """
+    updated_data = body.model_dump(exclude_none=True, exclude_unset=True)
+    try:
+        result = await deleteZoneById(zone_id, updated_data)
+        return result
+    
+    except Exception as e:
+        return {"message": str(e)}
+    

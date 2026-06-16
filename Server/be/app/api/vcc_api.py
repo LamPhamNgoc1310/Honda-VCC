@@ -6,16 +6,16 @@ from fastapi import APIRouter, HTTPException
 import os
 from app.services.vcc_logic import moveToPoint, get_possible_targets, create_new_point, get_all_points, update_point_data  # example name
 from schemas.TargetPointSchema import MoveToPointSchema, PossibleTargetsResponse, StartPointSchema, PointSchema, PointUpdateSchema
+from schemas.ZoneSchema import BaseZoneSchema, ZoneUpdate
+from app.services.vcc_service import vcc_service
+from app.services.zone_service import createZone
 import dotenv
 from dotenv import load_dotenv
 
 load_dotenv()
 logger = get_logger("camera_ai_app")
 ics_url = os.getenv("ICS_URL")
-
-
 router = APIRouter()
-
 
 @router.post("/find-nearest")
 async def find_nearest_api(body: dict[str, Any]):
@@ -91,7 +91,7 @@ async def create_task(body: MoveToPointSchema):
         logger.error(f"Error updating point status: {str(e)}")
         raise HTTPException(status_code=500, detail="Server???")
 
-@router.post("/point")
+@router.post("/create-point")
 async def create_point(body: PointSchema):
     """
     Example:
@@ -109,7 +109,7 @@ async def create_point(body: PointSchema):
     except Exception as e:
         return {"code": 500, "details": e}
     
-@router.get("/point")
+@router.get("/get-all-points")
 async def get_points():
     return await get_all_points()
 
