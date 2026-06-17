@@ -6,7 +6,6 @@ from fastapi import APIRouter, HTTPException
 import os
 from app.services.vcc_logic import moveToPoint, get_possible_targets, create_new_point, get_all_points, update_point_data  # example name
 from schemas.TargetPointSchema import MoveToPointSchema, PossibleTargetsResponse, StartPointSchema, PointSchema, PointUpdateSchema
-from schemas.ZoneSchema import BaseZoneSchema, ZoneUpdate
 from app.services.vcc_service import vcc_service
 from app.services.zone_service import createZone
 import dotenv

@@ -19,7 +19,7 @@ class TargetZoneSchema(BaseModel):
     target_zone: str = Field(..., description="This is the target zone.")
     priority: int = Field(..., description="This is the priority of the target zone, prioritized by ascending order.")
 
-class BaseZoneSchema(BaseModel):
+class SourceZoneSchema(BaseModel):
     source_zone: str = Field(..., description="The original zone calling for a task.")
     move_mode: str = Field(..., description="The classification of move mode to shortlist the required zones.")
     priorities: List[TargetZoneSchema] = Field(..., description="This is the priority zones lists.")
@@ -27,11 +27,17 @@ class BaseZoneSchema(BaseModel):
 class ZoneCreate(BaseModel):
     zone_id: str = Field(..., description="The unique identifier for the zone, e.g., '1.1' or 'Zone 2'")
     description: Optional[str] = Field(None, description="Optional description of the zone's purpose")
-    is_active: bool = Field(True, description="Whether the zone is currently active")
+    is_active: Optional[bool] = Field(None, description="Whether the zone is currently active")
 
 class ZoneUpdate(BaseModel):
+    zone_id: str
     description: Optional[str] = None
     is_active: Optional[bool] = None
+    
+class ZoneDelete(BaseModel):
+    zone_id: str
+    is_active: bool
+    is_deleted: bool
 
 class ZoneResponse(BaseModel):
     zone_id: str

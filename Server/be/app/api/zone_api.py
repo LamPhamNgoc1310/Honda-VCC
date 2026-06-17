@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException
 import os
 from app.services.vcc_logic import moveToPoint, get_possible_targets, create_new_point, get_all_points, update_point_data  # example name
 from schemas.TargetPointSchema import MoveToPointSchema, PossibleTargetsResponse, StartPointSchema, PointSchema, PointUpdateSchema
-from schemas.ZoneSchema import BaseZoneSchema, ZoneUpdate
+from schemas.ZoneSchema import SourceZoneSchema, ZoneUpdate, ZoneCreate, ZoneDelete
 from app.services.vcc_service import vcc_service
 from app.services.zone_service import createZone, updateZoneById, getAllZones, getZoneById, deleteZoneById
 import dotenv
@@ -18,43 +18,38 @@ ics_url = os.getenv("ICS_URL")
 router = APIRouter()
 
 @router.post("/create-zone", status_code=200)
-async def create_zone(body: BaseZoneSchema):
+async def create_zone(body: ZoneCreate):
     """
     Example:
     {
-        "source_zone": "1.1",
-        "move_mode": "to_rack",
-        "priorities": [
-            { "target_zone": "1.2", "weight": 1 },
-            { "target_zone": "4", "weight": 2 },
-            { "target_zone": "6", "weight": 3 }
-        ]
+        "zone_id": "1.1"
     }
     """
     
     result = await createZone(body.model_dump())
     
-    return {"message": result}
+    return result
 
 @router.get("/get-all-zones", status_code=200)
-async def get_all_zones(body: BaseZoneSchema):
+async def get_all_zones():
     result = await getAllZones()
     return result
 
-@router.get("/get-zone-by-id/{zone_id}")
-async def get_zone_by_id(zone_id: int):
+@router.get("/get-zone-by-id")
+async def get_zone_by_id(zone_id: str):
     result = await getZoneById(zone_id)
     return result
 
-@router.put("/update-zone-by-id/{zone_id}")
-async def update_zone_by_id(zone_id: int, body: ZoneUpdate):
+@router.patch("/update-zone-by-id")
+async def update_zone_by_id(body: ZoneUpdate):
     """
     Example: 
     {
-        zone_id: 69
+        "zone_id": "69",
     }
     """
     updated_data = body.model_dump(exclude_unset=True)
+    zone_id= updated_data.pop("zone_id")
     
     if not updated_data:
         return {"message": "The field is empty."}
@@ -66,19 +61,18 @@ async def update_zone_by_id(zone_id: int, body: ZoneUpdate):
     except Exception as e:
         return {"message": str(e)}
 
-@router.put("/delete-zone-by-id/{zone_id}")
-async def delete_zone_by_id(zone_id: int, body: ZoneUpdate):
+@router.delete("/delete-zone-by-id")
+async def delete_zone_by_id(body: ZoneDelete):
     """
     Example:
     {
-        zone_id: 45,
-        is_active: False,
-        is_deleted: True
+        "zone_id": 5,
+        "is_active": False,
+        "is_deleted": True
     }
     """
-    updated_data = body.model_dump(exclude_none=True, exclude_unset=True)
     try:
-        result = await deleteZoneById(zone_id, updated_data)
+        result = await deleteZoneById(body.model_dump(exclude_unset=True))
         return result
     
     except Exception as e:
