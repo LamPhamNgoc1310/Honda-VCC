@@ -11,6 +11,7 @@ from app.services.vcc_service import vcc_service
 from app.services.zone_service import createZone
 import dotenv
 from dotenv import load_dotenv
+from app.services.vcc_service import vcc_service
 
 load_dotenv()
 logger = get_logger("camera_ai_app")
