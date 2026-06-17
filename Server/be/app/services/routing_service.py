@@ -9,9 +9,7 @@ from pymongo import AsyncMongoClient
 from dotenv import load_dotenv
 from datetime import datetime, timezone
 
-
 load_dotenv()
-
 logger = get_logger("camera_ai_app")
 ics_url = f"http://192.168.1.100:7000"
 client = AsyncMongoClient(os.getenv("MONGO_URL"))

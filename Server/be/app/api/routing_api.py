@@ -10,8 +10,6 @@ logger = get_logger("camera_ai_app")
 ics_url = os.getenv("ICS_URL")
 router = APIRouter()
 
-router = APIRouter()
-
 @router.post("/create-zone-priority-rule")
 async def create_zone_priority_rule(body: PriorityRuleCreate):
     """

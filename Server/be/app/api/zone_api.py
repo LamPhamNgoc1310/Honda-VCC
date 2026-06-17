@@ -48,14 +48,10 @@ async def update_zone_by_id(body: ZoneUpdate):
         "zone_id": "69",
     }
     """
-    updated_data = body.model_dump(exclude_unset=True)
-    zone_id= updated_data.pop("zone_id")
-    
-    if not updated_data:
-        return {"message": "The field is empty."}
-    
+    # updated_data = body.model_dump(exclude_unset=True)
+    # zone_id= updated_data.pop("zone_id")
     try:
-        result = await updateZoneById(zone_id, updated_data)
+        result = await updateZoneById(body)
         return result
         
     except Exception as e:

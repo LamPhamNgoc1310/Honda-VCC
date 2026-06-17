@@ -4,8 +4,9 @@ from typing import Any
 from shared.logging import get_logger
 from fastapi import APIRouter, HTTPException
 import os
-from app.services.vcc_logic import moveToPoint, get_possible_targets, create_new_point, get_all_points, update_point_data  # example name
+from app.services.vcc_logic import moveToPoint, get_possible_targets, create_new_point, get_all_points, update_point_data, updatePointStatus
 from schemas.TargetPointSchema import MoveToPointSchema, PossibleTargetsResponse, StartPointSchema, PointSchema, PointUpdateSchema
+from schemas.RCSSchema import RCSStatusCode
 from app.services.vcc_service import vcc_service
 from app.services.zone_service import createZone
 import dotenv
@@ -138,7 +139,6 @@ async def update_point(point_id: int, body: PointUpdateSchema):
     except Exception as e:
         return {"error": f"str{e}"}
 
-
 @router.post("/possible-targets")
 async def return_possible_targets(body: StartPointSchema):
     """
@@ -149,7 +149,7 @@ async def return_possible_targets(body: StartPointSchema):
     }
     """
     try:
-        result = await get_possible_targets(body.start_point, body.move_mode)
+        result = await get_possible_targets(body.model_dump())
         
         if "error" in result:
             logger.error(f"Error fetching targets: {result['error']}")
@@ -162,3 +162,20 @@ async def return_possible_targets(body: StartPointSchema):
     except Exception as e:
         logger.exception("Unexpected error calculating possible targets")
         raise HTTPException(status_code=500, detail="Server error processing targets")
+    
+@router.patch("/update-point-status")
+async def update_point_status(body: RCSStatusCode):
+    """
+    Example Payload: 
+    { 
+        "point_id": 10003324, 
+        "status_code": 8 
+    }
+    """
+    # Simply dump the model and pass it to the service
+    result = await updatePointStatus(body.model_dump())
+    
+    if "error" in result:
+        raise HTTPException(status_code=400, detail=result["error"])
+        
+    return result
