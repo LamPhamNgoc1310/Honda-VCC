@@ -146,37 +146,37 @@ def dijkstra_to_targets(
 
 
 DEFAULT_WAREHOUSE = [
-    {"row": 1, "column": 1, "node_id": 40000368, "status": "shelf", "metadata": {}}, 
-    {"row": 1, "column": 2, "node_id": 40000369, "status": "shelf", "metadata": {}}, 
-    {"row": 1, "column": 3, "node_id": 40000370, "status": "shelf", "metadata": {}},
-    {"row": 1, "column": 4, "node_id": 40000371, "status": "shelf", "metadata": {}}, 
-    {"row": 1, "column": 5, "node_id": 40000367, "status": "shelf", "metadata": {}},
-    {"row": 2, "column": 1, "node_id": 40000383, "status": "shelf", "metadata": {}}, 
-    {"row": 2, "column": 2, "node_id": 40000384, "status": "shelf", "metadata": {}}, 
-    {"row": 2, "column": 3, "node_id": 40000385, "status": "shelf", "metadata": {}},
-    {"row": 2, "column": 4, "node_id": 40000376, "status": "shelf", "metadata": {}}, 
-    {"row": 2, "column": 5, "node_id": 40000377, "status": "shelf", "metadata": {}},
-    {"row": 3, "column": 1, "node_id": 40000154, "status": "shelf", "metadata": {}}, 
-    {"row": 3, "column": 2, "node_id": 40000156, "status": "shelf", "metadata": {}}, 
-    {"row": 3, "column": 3, "node_id": 40000158, "status": "shelf", "metadata": {}},
-    {"row": 3, "column": 4, "node_id": 40000159, "status": "shelf", "metadata": {}}, 
-    {"row": 3, "column": 5, "node_id": 40000160, "status": "shelf", "metadata": {}}, 
-    {"row": 3, "column": 5, "node_id": 40000208, "status": "shelf", "metadata": {}},
-    {"row": 3, "column": 1, "node_id": 40000141, "status": "shelf", "metadata": {}}, 
-    {"row": 3, "column": 2, "node_id": 40000146, "status": "shelf", "metadata": {}}, 
-    {"row": 3, "column": 3, "node_id": 40000147, "status": "shelf", "metadata": {}},
-    {"row": 3, "column": 4, "node_id": 40000148, "status": "shelf", "metadata": {}},
-    {"row": 3, "column": 5, "node_id": 40000138, "status": "shelf", "metadata": {}}, 
-    {"row": 3, "column": 5, "node_id": 40000137, "status": "shelf", "metadata": {}},
-    {"row": 4, "column": 1, "node_id": 40005576, "status": "shelf", "metadata": {}}, 
-    {"row": 4, "column": 2, "node_id": 40005575, "status": "shelf", "metadata": {}}, 
-    {"row": 4, "column": 3, "node_id": 40005574, "status": "shelf", "metadata": {}},
-    {"row": 4, "column": 4, "node_id": 40005572, "status": "shelf", "metadata": {}},
-    {"row": 4, "column": 1, "node_id": 40001423, "status": "shelf", "metadata": {}}, 
-    {"row": 4, "column": 2, "node_id": 40000126, "status": "shelf", "metadata": {}}, 
-    {"row": 4, "column": 3, "node_id": 40000127, "status": "shelf", "metadata": {}},
-    {"row": 4, "column": 4, "node_id": 40000128, "status": "shelf", "metadata": {}},
-    {"row": 4, "column": 5, "node_id": 40000130, "status": "shelf", "metadata": {}},
+    {"row": 1, "column": 1, "node_id": 40000368, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 1, "column": 2, "node_id": 40000369, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 1, "column": 3, "node_id": 40000370, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 1, "column": 4, "node_id": 40000371, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 1, "column": 5, "node_id": 40000367, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 2, "column": 1, "node_id": 40000383, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 2, "column": 2, "node_id": 40000384, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 2, "column": 3, "node_id": 40000385, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 2, "column": 4, "node_id": 40000376, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 2, "column": 5, "node_id": 40000377, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 3, "column": 1, "node_id": 40000154, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 3, "column": 2, "node_id": 40000156, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 3, "column": 3, "node_id": 40000158, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 3, "column": 4, "node_id": 40000159, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 3, "column": 5, "node_id": 40000160, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 3, "column": 5, "node_id": 40000208, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 3, "column": 1, "node_id": 40000141, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 3, "column": 2, "node_id": 40000146, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 3, "column": 3, "node_id": 40000147, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 3, "column": 4, "node_id": 40000148, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 3, "column": 5, "node_id": 40000138, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 3, "column": 5, "node_id": 40000137, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 4, "column": 1, "node_id": 40005576, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 4, "column": 2, "node_id": 40005575, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 4, "column": 3, "node_id": 40005574, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 4, "column": 4, "node_id": 40005572, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 4, "column": 1, "node_id": 40001423, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 4, "column": 2, "node_id": 40000126, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)}, 
+    {"row": 4, "column": 3, "node_id": 40000127, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 4, "column": 4, "node_id": 40000128, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
+    {"row": 4, "column": 5, "node_id": 40000130, "status": "shelf", "metadata": {}, "updated_at": datetime.now(timezone.utc)},
 ]
 
 class vcc_service:
@@ -357,11 +357,54 @@ class vcc_service:
         warehouse_collection = get_collection("warehouse")
         code = metadata.get("code")
 
+        empty_list = [
+            str(self.index_warehouse_full[row][col]["node_id"])
+            for row in self.index_warehouse_full
+            for col in self.index_warehouse_full[row]
+            if self.index_warehouse_full[row][col].get("status") == "empty"
+        ]
+
         #TH1: Found the resemble code
         if code in self.index_warehouse_code:
             warehouse = self.index_warehouse_code[code]
             sort_list = sorted(warehouse, key=lambda s: (s["row"], s["column"]))
-            first, last = sort_list[0], sort_list[-1]
+            edge = sort_list[0]["node_id"]
+            target = self.find_nearest_endpoint(edge, empty_list)
+
+            if target:
+                logger.info(f"Found the nearest endpoint {target}")
+                return {"code": 200, "message": "Found the nearest endpoint", "data": target}
+            
+
+    async def get_optimize_outbound(self, metadata):
+        warehouse_collection = get_collection("warehouse")
+        code = metadata.get("code")
+
+        if not code in self.index_warehouse_code:
+            logger.info(f"Don't have any product with code {code}")
+            return {"code": 200, "message": "Don't have any product with code"}
+        
+        sort_index_code = sorted(self.index_warehouse_code[code], key=lambda s: s["updated_at"])
+        quantity = metadata.get("quantity")
+        selected_index = []
+        surplus = {}
+
+        for i in sort_index_code:
+            quantity -= i.get("quantity")
+            selected_index.append(i)
+            if quantity == 0:
+                return {"code": 200, "message": "Found the product", "data": selected_index}
+            elif quantity < 0:
+                surplus = index[i]
+                selected_index[i]["quantity"] += quantity
+                surplus["quantity"] = -quantity
+                return {"code": 200, "message": "Found the product", "data": selected_index, "surplus": surplus}
+            else:
+                continue
+
+        logger.info(f"Not enough product for code {code}")
+        return {"code": 200, "message": "Not enough product for code"}
+                
 
     async def get_warehouse_data(self) -> list[dict]:
         warehouse_collection = get_collection("warehouse")
