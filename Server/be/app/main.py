@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from shared import setup_logger
 import asyncio
 from app.core.config import settings
-from app.api import auth, users, permissions, agv_dashboard, websocket, node, roles, area, caller, notification, camera, task_status, monitor, route, agv_websocket, vcc_api, vhl_api, move_to_point_api, zone_api
+from app.api import auth, users, permissions, agv_dashboard, websocket, node, roles, area, caller, notification, camera, task_status, monitor, route, agv_websocket, vcc_api, vhl_api, move_to_point_api, zone_api, routing_api
 from app.core.database import connect_to_mongo, close_mongo_connection
 from app.scheduler.agv_scheduler import start_scheduler as start_agv_scheduler, shutdown_scheduler as shutdown_agv_scheduler
 from app.scheduler.clean_up_scheduler import start_scheduler as start_cleanup_scheduler, shutdown_scheduler as shutdown_cleanup_scheduler
@@ -156,10 +156,11 @@ app.include_router(sum_parts_router, prefix="/api", tags=["Sum Parts Replace"])
 app.include_router(update_part_log_router, prefix="/api", tags=["Update Part With Log"])
 app.include_router(maintenance_check_router, prefix="/api", tags=["Maintenance Check"])
 app.include_router(update_amr_name_router, prefix="/api", tags=["Update AMR Name"])
-#API monitor
+# API Caller
 app.include_router(vcc_api.router, prefix="/vcc", tags=["VCC Points Router"])
 app.include_router(move_to_point_api.router, prefix="/vcc", tags=["VCC Update Status Router"])
 app.include_router(zone_api.router, prefix="/vcc", tags=["VCC Zone Management"])
+app.include_router(routing_api.router, prefix="/vcc", tags=["VCC Routing Rule Management"])
 
 app.include_router(pdf_router, tags=["PDF"])
 app.include_router(notification.router, tags=["Notification"])

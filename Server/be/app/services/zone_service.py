@@ -8,7 +8,7 @@ import pymongo
 from pymongo import AsyncMongoClient
 from dotenv import load_dotenv
 from datetime import datetime, timezone
-from schemas.ZoneSchema import BaseZoneSchema
+
 
 load_dotenv()
 
@@ -39,7 +39,8 @@ async def createZone(body: dict)->dict:
         if not existing_zone:
             await zones_collection.insert_one(new_document)
             new_document.pop("_id", None)
-            return {"message": "Okay", "details": f"A zone is created: {new_document}" }
+            return {"details": f"{new_document}" }
+        return "Zone exists."
     except Exception as e:
         return {"error": str(e)}
     
@@ -53,10 +54,11 @@ async def getZoneById(zone_id: str):
         return {"message": f"Zone {zone_id} does not exist."}
     return zone
 
-async def updateZoneById(zone_id:str, updated_data: dict):
+async def updateZoneById(updated_data: dict):
     now = datetime.now(timezone.utc)
     current_user = "admin_user"
     
+    zone_id = updated_data["zone_id"]
     updated_data["updatedAt"] = now
     updated_data["updatedBy"] = current_user
     
@@ -66,16 +68,26 @@ async def updateZoneById(zone_id:str, updated_data: dict):
             {"$set": updated_data})
         
         if result.matched_count == 0:
-            return {"message": "No zone matching the id {zone_id}"}
+            return {"message": f"No zone matching the id {zone_id}"}
         
-        return {"message": "Zone is updated {result}"}
+        
+        return {"message": f"Zone is updated {result}"}
         
     except Exception as e:
         return {"error": str(e)}
     
-async def deleteZoneById(zone_id:str, updated_data: dict):
+async def deleteZoneById(body: dict):
     now = datetime.now(timezone.utc)
     current_user = "admin_user"
+    
+    zone_id = body.get("zone_id")
+    
+    updated_data = {
+        "is_active": body.get("is_active"),
+        "is_deleted": body.get("is_deleted"),
+        "updatedAt": now,
+        "updatedBy": current_user
+    }
     
     try:
         result = await zones_collection.update_one(
@@ -84,8 +96,8 @@ async def deleteZoneById(zone_id:str, updated_data: dict):
         )
         
         if result.matched_count == 0:
-            return {"message": "No zone matching the id {zone_id}"}        
-        return {"message": "Zone {zone_id} is successfully deleted."}
+            return {"message": f"No zone matching the id {zone_id}"}        
+        return {"message": f"Zone {zone_id} is successfully deleted."}
     
     except Exception as e:
         return {"error": str(e)}

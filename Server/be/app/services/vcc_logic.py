@@ -7,8 +7,8 @@ import os
 import pymongo
 from pymongo import AsyncMongoClient
 from dotenv import load_dotenv
-from datetime import datetime, timezone
 from app.services.vcc_service import vcc_service
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -17,45 +17,64 @@ ics_url = f"http://192.168.1.100:7000"
 client = AsyncMongoClient(os.getenv("MONGO_URL"))
 db = client.get_database("test_caller")
 points_collection= db.get_collection("points")
+routing_rules_collection = db.get_collection("routing_rules")
+zones_collection = db.get_collection("zones")
 maps_collection = db.get_collection("maps")
 
-async def get_possible_targets(start_point: int, move_mode: str) -> dict:
-    zone_priority = ["1.2", "1.1", "2.1", "1.5"] 
 
+async def get_possible_targets(body: dict) -> dict:
+    start_point = body.get("start_point")
+    print(start_point)
+    move_mode = body.get("move_mode")
     try:
-        cursor = points_collection.find({"status": "empty"}, {"_id": 0})
+        start = await points_collection.find_one({"point": start_point})
+        if not start:
+            return {"error": f"Point {start_point} not found"}
         
-        empty_points = await cursor.to_list(length=None)
-
-        #Searching the priority zone before reaching the nearest point
+        zone= start.get("zone")
+        
+        rule = await routing_rules_collection.find_one({"source_zone": zone, "move_mode": move_mode})
+        
+        if not rule: 
+            return {"error": f"Rule for this zone: {zone} with move mode: {move_mode} does not exist."}
+        
+        sorted_target_zones = sorted(rule["priorities"], key=lambda x: x["weight"])
+        ordered_target_zones = [t["target_zone"] for t in sorted_target_zones]
+        
         list_priority = []
         selected_zone = None
-        for zone in zone_priority:
-            list_priority = [p.get("point") for p in empty_points if p.get("zone") == zone]
-            if list_priority:
-                selected_zone = zone
-                break
+        
+        for target_zone in ordered_target_zones:
+            # Query MongoDB specifically for empty points in THIS zone
+            cursor = points_collection.find(
+                {"zone": target_zone, "status": "empty"}, 
+                {"_id": 0}
+            )
+            empty_points_in_zone = await cursor.to_list(length=None)
+
+            if empty_points_in_zone:
+                selected_zone = target_zone
+                list_priority = [p.get("point") for p in empty_points_in_zone]
+                break # We found our highest-priority matches, stop looping!
 
         if not list_priority:
-            logger.info("Don't have any empty point to move")
+            logger.info("Don't have any empty point to move in the valid target zones")
             return {"message": "No empty points available", "data": []}
-
-        #Selecting the nearest point from the list of priority
-        if selected_zone != 3:
-            selected_point = vcc_service.find_nearest(start_point, list_priority)
-            if not selected_point:
-                logger.info("Don't have any nearest point to move")
-                return {"message": "No nearest point available", "data": []}
+        
+        selected_point = vcc_service.find_nearest_endpoint(start_point, list_priority)
+        
+        if not selected_point:
+            logger.info("Don't have any reachable nearest point to move")
+            return {"message": "No reachable nearest point available", "data": []}
 
         return {
             "message": "Possible targets found", 
-            "nearest_point": selected_point
+            "nearest_point": selected_point,
+            "selected_zone": selected_zone
         }
-
     except Exception as e:
         return {"error": f"Database error: {str(e)}"}
 
-#12/06/2026
 async def create_new_point(new_point: int, zone: str) -> dict:
     now = datetime.now(timezone.utc)
     current_user = "admin_user"
@@ -115,6 +134,27 @@ async def update_point_data(point: int, updated_fields: dict)->dict:
     except Exception as e:
         return {"error": f"{e}"}
     return
+async def updatePointStatus(body: dict)->dict:
+    # 1. Pop the variables out of the dictionary, just like your other functions
+    point_id = body.pop("point_id", None)
+    status_code = body.pop("status_code", None)
+    
+    if not point_id:
+        return {"error": "point_id is required."}
+
+    # 2. Translate the hardware code
+    if status_code == 3:
+        new_status = "empty"
+    elif status_code == 8:
+        new_status = "filled"
+    else:
+        return {"error": "Invalid status code. Must be 3 (empty) or 8 (filled)."}
+    
+    # 3. Create the update dictionary
+    update_payload = {"status": new_status}
+    
+    # 4. Pass it to your existing generic update function
+    return await update_point_data(point_id, update_payload)
 
 async def add_task(payload):
     try:    
@@ -151,6 +191,7 @@ async def moveToPoint(
         "target_point": target_point,
         "move_mode": move_mode,
     }
+
 
 
 # mock_response = {
