@@ -319,24 +319,29 @@ class vcc_service:
                 await warehouse_collection.insert_one(data)
                 logger.info(f"Created row {warehouse['row']} column {warehouse['column']} warehouse")
 
-    async def update_status(self, row, column, new_status, metadata):
+    async def update_status(self, point_id, new_status, metadata):
         warehouse_collection = get_collection("warehouse")
         now = datetime.now(timezone.utc)
 
         try:
             query = {
-                "row": int(row),
-                "column": int(column)
+                "node_id": int(point_id)
             }
-            
+
+            if metadata:  
+                metadata_data = {
+                    "metadata": metadata,
+                }
+            else:
+                metadata_data = {}
+
             update_data = {
                 "$set": {
                     "status": str(new_status),
-                    "metadata": metadata,
+                    **metadata_data,
                     "updated_at": now
                 }
             }
-
             result = await warehouse_collection.update_one(query, update_data)
 
             if result.matched_count > 0:

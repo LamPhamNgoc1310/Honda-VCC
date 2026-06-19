@@ -4,6 +4,7 @@ import useNodesBySelectedUser from '@/hooks/Setting/useNodesBySelectedUser';
 import { useCreateTask } from '@/hooks/MobileGrid/useCreateTask';
 import { useRequestEndSlot } from '@/hooks/MobileGrid/useRequestEndSlot';
 import { clearMonitor } from '@/services/taskStatus';
+import { getPossibleTargets, cancelChoosing, moveToPointVcc } from '@/services/possibleTargets';
 
 const RETURN_MATERIAL_TYPE = 'return_vl';
 const RETURN_SPARE_TYPE = 'return_pt';
@@ -27,6 +28,25 @@ const MobileGridDisplay = () => {
   const [selectedReturnNodeForDual, setSelectedReturnNodeForDual] = useState(null);
   const [isSupplyGridOpen, setIsSupplyGridOpen] = useState(false);
   const [isReturnGridOpen, setIsReturnGridOpen] = useState(false);
+
+  const METADATA_INITIAL = {
+    ma_san_pham: '',
+    ten_san_pham: '',
+    trong_luong: '',
+    so_luong: '',
+    so_cavity: '',
+    ma_khuon: '',
+  };
+  const [showMetadataForm, setShowMetadataForm] = useState(false);
+  const [metadata, setMetadata] = useState(METADATA_INITIAL);
+  const [possibleTargetResult, setPossibleTargetResult] = useState(null);
+  const [isLoadingTargets, setIsLoadingTargets] = useState(false);
+  const [targetError, setTargetError] = useState(null);
+
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState(null);
+  const [isConfirmingSend, setIsConfirmingSend] = useState(false);
+  const [confirmSendError, setConfirmSendError] = useState(null);
 
   const getNodeTypeLabel = (nodeType) => nodeTypeMapping[nodeType] || nodeType;
   
@@ -242,15 +262,78 @@ const MobileGridDisplay = () => {
   const handleNodeSelect = (node) => {
     console.log("[MobileGridDisplay] handleNodeSelect - Selected node:", node);
     setSelectedNode(node);
-    setShowConfirmModal(true);
     setSelectedEndQr(null);
+    setMetadata(METADATA_INITIAL);
+    setTargetError(null);
+    setShowMetadataForm(true);
   };
 
   const handleAutoQrSelect = (autoNode) => {
     console.log("[MobileGridDisplay] handleAutoQrSelect - Selected auto node:", autoNode);
     setSelectedNode(autoNode);
     setSelectedEndQr(autoNode.end);
-    setShowConfirmModal(true);
+    setMetadata(METADATA_INITIAL);
+    setTargetError(null);
+    setShowMetadataForm(true);
+  };
+
+  const handleMetadataChange = (field, value) => {
+    setMetadata((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleMetadataConfirm = async () => {
+    setIsLoadingTargets(true);
+    setTargetError(null);
+    try {
+      const result = await getPossibleTargets(selectedNode.start, 'to_rack', metadata);
+      setPossibleTargetResult(result);
+      setShowMetadataForm(false);
+      setShowConfirmModal(true);
+    } catch (error) {
+      console.error('[MobileGridDisplay] getPossibleTargets error:', error);
+      setTargetError(
+        error?.response?.data?.detail ||
+        error?.message ||
+        'Không tìm được điểm đến. Vui lòng thử lại.'
+      );
+    } finally {
+      setIsLoadingTargets(false);
+    }
+  };
+
+  const handleCancelAll = () => {
+    setShowMetadataForm(false);
+    setShowConfirmModal(false);
+    setSelectedNode(null);
+    setSelectedEndQr(null);
+    setMetadata(METADATA_INITIAL);
+    setPossibleTargetResult(null);
+    setTargetError(null);
+    setCancelError(null);
+    setConfirmSendError(null);
+    setSelectedSupplyNodeForDual(null);
+    setSelectedReturnNodeForDual(null);
+  };
+
+  const handleCancelConfirm = async () => {
+    if (possibleTargetResult?.nearest_point && selectedNode?.start) {
+      setIsCancelling(true);
+      setCancelError(null);
+      try {
+        await cancelChoosing(selectedNode.start, possibleTargetResult.nearest_point, '');
+        handleCancelAll();
+      } catch (error) {
+        setCancelError(
+          error?.response?.data?.detail ||
+          error?.message ||
+          'Hủy thất bại. Vui lòng thử lại.'
+        );
+      } finally {
+        setIsCancelling(false);
+      }
+    } else {
+      handleCancelAll();
+    }
   };
 
   const handleConfirmSend = async () => {
@@ -320,48 +403,39 @@ const MobileGridDisplay = () => {
     }
    
     if (!selectedNode) return;
-    
-    // Chuyển đổi node_type trước khi gửi
-    let nodeType = selectedNode.node_type;
-    if (nodeType === 'return_vl' || nodeType === 'return_pt') {
-        nodeType = 'returns';
-    }
 
-    const taskData = {
-      node_name: selectedNode.node_name,
-      node_type: nodeType,
-      owner: currentUser?.username,
-      process_code: selectedNode.process_code,
-      line: selectedNode.line,
-      start: selectedNode.start,
-      end: selectedNode.end,
-      next_start: selectedNode.next_start || 0,
-      next_end: selectedNode.next_end || 0
-    };
-    
-    const response = await createTaskHandler(taskData);
-    
-    const logEntry = {
-      id: Date.now(),
-      nodeName: selectedNode.node_name,
-      line: selectedNode.line,
-      typeLabel: selectedNode.node_type,
-      status: response?.data?.status||'false'
-    };
-    setCommandLogs((prev) => [logEntry, ...prev]);
-
-    if (response?.data?.status === 'success') {
-      setShowConfirmModal(false);
-      setSelectedNode(null);
-    } else {
-      console.error(` Gửi lệnh thất bại: ${result.error || 'Lỗi không xác định'}`);
+    setIsConfirmingSend(true);
+    setConfirmSendError(null);
+    try {
+      const result = await moveToPointVcc(
+        selectedNode.start,
+        possibleTargetResult?.nearest_point,
+        '',
+        metadata
+      );
+      const logEntry = {
+        id: Date.now(),
+        nodeName: selectedNode.node_name,
+        line: selectedNode.line,
+        typeLabel: selectedNode.node_type,
+        status: result?.status || 'success',
+      };
+      setCommandLogs((prev) => [logEntry, ...prev]);
+      handleCancelAll();
+    } catch (error) {
+      console.error('[MobileGridDisplay] moveToPointVcc error:', error);
+      setConfirmSendError(
+        error?.response?.data?.detail ||
+        error?.message ||
+        'Gửi lệnh thất bại. Vui lòng thử lại.'
+      );
+    } finally {
+      setIsConfirmingSend(false);
     }
   };
 
   const handleCancelSend = () => {
-    setShowConfirmModal(false);
-    setSelectedNode(null);
-    setSelectedEndQr(null);
+    handleCancelAll();
   };
   
   return (
@@ -486,7 +560,11 @@ const MobileGridDisplay = () => {
                     <button
                       className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400"
                       disabled={!selectedSupplyNodeForDual || !selectedReturnNodeForDual}
-                      onClick={() => setShowConfirmModal(true)}
+                      onClick={() => {
+                        setMetadata(METADATA_INITIAL);
+                        setTargetError(null);
+                        setShowMetadataForm(true);
+                      }}
                     >
                       Xác nhận Lệnh Đôi
                     </button>
@@ -613,19 +691,90 @@ const MobileGridDisplay = () => {
         </div>
       </div>
 
-      {showConfirmModal && ((selectedNode || selectedEndQr !== null) || (selectedNodeType === 'dual' && selectedSupplyNodeForDual && selectedReturnNodeForDual)) && (
+      {/* ── METADATA FORM MODAL ── */}
+      {showMetadataForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Thông tin hàng hóa</h3>
+
+            <div className="space-y-3">
+              {[
+                { field: 'ma_san_pham',  label: 'Mã sản phẩm' },
+                { field: 'ten_san_pham', label: 'Tên sản phẩm' },
+                { field: 'trong_luong',  label: 'Trọng lượng' },
+                { field: 'so_luong',     label: 'Số lượng' },
+                { field: 'so_cavity',    label: 'Số cavity' },
+                { field: 'ma_khuon',     label: 'Mã khuôn' },
+              ].map(({ field, label }) => (
+                <div key={field}>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {label}
+                  </label>
+                  <input
+                    type="text"
+                    value={metadata[field]}
+                    onChange={(e) => handleMetadataChange(field, e.target.value)}
+                    disabled={isLoadingTargets}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#016B61] disabled:bg-gray-100"
+                    placeholder={`Nhập ${label.toLowerCase()}`}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {targetError && (
+              <p className="mt-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+                {targetError}
+              </p>
+            )}
+
+            <div className="flex gap-3 mt-5">
+              <button
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded font-medium transition-colors duration-200"
+                onClick={handleCancelAll}
+                disabled={isLoadingTargets}
+              >
+                Hủy
+              </button>
+              <button
+                className="flex-1 bg-[#016B61] hover:bg-[#014d47] text-white py-2 px-4 rounded font-medium transition-colors duration-200 disabled:bg-gray-400"
+                onClick={handleMetadataConfirm}
+                disabled={isLoadingTargets}
+              >
+                {isLoadingTargets ? 'Đang tìm điểm đến...' : 'Xác nhận'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CONFIRM MODAL ── */}
+      {showConfirmModal && ((selectedNode || selectedEndQr !== null) || (selectedNodeType === 'dual' && selectedSupplyNodeForDual && selectedReturnNodeForDual)) && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
             <div className="text-center">
               <div className="w-16 h-16 bg-[#016B61]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl"></span>
               </div>
-              
+
               <h3 className="text-lg font-bold text-gray-800 mb-2">
                 {selectedEndQr !== null ? 'Xác nhận yêu cầu cấp hàng' : 'Xác nhận gửi lệnh'}
               </h3>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+
+              {/* Thông tin điểm đi/đến từ API /possible-targets */}
+              {possibleTargetResult?.nearest_point && (
+                <div className="bg-[#016B61]/10 border border-[#016B61]/30 rounded-lg px-4 py-3 mb-4 text-center">
+                  <p className="text-sm text-gray-600 mb-1">Lộ trình</p>
+                  <span className="font-bold text-[#016B61] text-xl">
+                    {selectedNode?.start} → {possibleTargetResult.nearest_point}
+                  </span>
+                  {possibleTargetResult.selected_zone && (
+                    <p className="text-xs text-gray-500 mt-1">Khu vực: {possibleTargetResult.selected_zone}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
                 {selectedNodeType === 'dual' && selectedSupplyNodeForDual && selectedReturnNodeForDual ? (
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
@@ -635,12 +784,12 @@ const MobileGridDisplay = () => {
                     <hr/>
                     <div className="flex justify-between">
                       <span className="font-medium text-gray-600">1. Điểm cấp:</span>
-                      <span className="font-bold  text-[#016B61]">{selectedSupplyNodeForDual.node_name}</span>
+                      <span className="font-bold text-[#016B61]">{selectedSupplyNodeForDual.node_name}</span>
                     </div>
                     <hr/>
                     <div className="flex justify-between">
                       <span className="font-medium text-gray-600">2. Điểm trả:</span>
-                      <span className="font-bold  text-[#016B61]">{selectedReturnNodeForDual.node_name}</span>
+                      <span className="font-bold text-[#016B61]">{selectedReturnNodeForDual.node_name}</span>
                     </div>
                   </div>
                 ) : selectedEndQr !== null && selectedNode ? (
@@ -676,30 +825,53 @@ const MobileGridDisplay = () => {
                         <span className="font-bold text-blue-600">{selectedNode.line}</span>
                       </div>
                     )}
-                    <div className="flex justify-center">
-                      <span className="font-bold text-[#016B61] text-lg">{selectedNode.start} → {selectedNode.end}</span>
-                    </div>
-                    {selectedNode.next_start > 0 && selectedNode.next_end > 0 && (
-                      <div className="flex justify-center">
-                        <span className="font-bold text-[#016B61] text-lg">{selectedNode.next_start} → {selectedNode.next_end}</span>
-                      </div>
-                    )}
                   </div>
                 ) : null}
               </div>
 
+              {/* Bảng thông tin hàng hóa (metadata) */}
+              {(metadata.ma_san_pham || metadata.ten_san_pham || metadata.trong_luong ||
+                metadata.so_luong || metadata.so_cavity || metadata.ma_khuon) && (
+                <div className="bg-gray-50 rounded-lg p-4 mb-4 text-left">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Thông tin hàng hóa</p>
+                  <div className="space-y-1 text-sm">
+                    {[
+                      { label: 'Mã sản phẩm',  value: metadata.ma_san_pham },
+                      { label: 'Tên sản phẩm', value: metadata.ten_san_pham },
+                      { label: 'Trọng lượng',  value: metadata.trong_luong },
+                      { label: 'Số lượng',     value: metadata.so_luong },
+                      { label: 'Số cavity',    value: metadata.so_cavity },
+                      { label: 'Mã khuôn',     value: metadata.ma_khuon },
+                    ].filter(({ value }) => value).map(({ label, value }) => (
+                      <div key={label} className="flex justify-between">
+                        <span className="text-gray-500">{label}:</span>
+                        <span className="font-medium text-gray-800">{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(cancelError || confirmSendError) && (
+                <p className="mb-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 text-left">
+                  {cancelError || confirmSendError}
+                </p>
+              )}
+
               <div className="flex gap-3">
                 <button
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded font-medium transition-colors duration-200"
-                  onClick={handleCancelSend}
+                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 px-4 rounded font-medium transition-colors duration-200 disabled:opacity-50"
+                  onClick={handleCancelConfirm}
+                  disabled={isCancelling || isConfirmingSend}
                 >
-                  Hủy
+                  {isCancelling ? 'Đang hủy...' : 'Hủy'}
                 </button>
                 <button
-                  className="flex-1 bg-[#016B61] hover:bg-[#014d47] text-white py-2 px-4 rounded font-medium transition-colors duration-200"
+                  className="flex-1 bg-[#016B61] hover:bg-[#014d47] text-white py-2 px-4 rounded font-medium transition-colors duration-200 disabled:bg-gray-400"
                   onClick={handleConfirmSend}
+                  disabled={isConfirmingSend || isCancelling}
                 >
-                  Xác nhận
+                  {isConfirmingSend ? 'Đang gửi...' : 'Xác nhận'}
                 </button>
               </div>
             </div>
