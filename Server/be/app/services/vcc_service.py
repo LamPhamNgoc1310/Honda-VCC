@@ -362,15 +362,19 @@ class vcc_service:
         warehouse_collection = get_collection("warehouse")
         code = metadata.get("code")
 
-        empty_list = [
-            str(self.index_warehouse_full[row][col]["node_id"])
-            for row in self.index_warehouse_full
-            for col in self.index_warehouse_full[row]
-            if self.index_warehouse_full[row][col].get("status") == "empty"
-        ]
-
         #TH1: Found the resemble code
         if code in self.index_warehouse_code:
+            empty_list = [
+                str(self.index_warehouse_full[row][col]["node_id"])
+                for row in self.index_warehouse_full
+                for col in self.index_warehouse_full[row]
+                if self.index_warehouse_full[row][col].get("status") == "empty"
+            ]
+
+            if len(empty_list) == 0:
+                logger.info(f"Don't have any empty warehouse")
+                return {"code": 200, "message": "Don't have any empty warehouse"}
+
             warehouse = self.index_warehouse_code[code]
             sort_list = sorted(warehouse, key=lambda s: (s["row"], s["column"]))
             edge = sort_list[0]["node_id"]
@@ -379,7 +383,59 @@ class vcc_service:
             if target:
                 logger.info(f"Found the nearest endpoint {target}")
                 return {"code": 200, "message": "Found the nearest endpoint", "data": target}
+
+        #TH2: Found optimize in warehouse
+        else:
+            logger.info(f"Don't have resemble product with code {code}")
+            empty_list = [
+                self.index_warehouse_full[row][col]
+                for row in self.index_warehouse_full
+                for col in self.index_warehouse_full[row]
+                if self.index_warehouse_full[row][col].get("status") == "empty"
+            ]
+            if len(empty_list) == 0:
+                logger.info(f"Don't have any empty warehouse")
+                return {"code": 200, "message": "Don't have any empty warehouse"}
+
+            empty_list.sort(key=lambda x: (x["row"], x["column"]))
+            selected_index = []
+            start = 0
+
+            max_col_per_row = {
+                row: max(self.index_warehouse_full[row].keys()) 
+                for row in self.index_warehouse_full
+            }
+
+            #First optimize - empty in the front or rear of row with 3 beside empty
+            for i, empty in enumerate(empty_list):
+                row = empty["row"]
+                col = empty["column"]
+                if col == 1:  
+                    if (i + 3 < len(empty_list) and
+                        all(empty_list[i+k]["row"] == row and
+                            empty_list[i+k]["column"] == col + k
+                            for k in range(1, 4))):
+                        return {"code": 200, "data": empty["node_id"]}
+                elif col == max_col_per_row[row]:  
+                    if (i >= 3 and
+                        all(empty_list[i-k]["row"] == row and
+                            empty_list[i-k]["column"] == col - k
+                            for k in range(1, 4))):
+                        return {"code": 200, "data": empty["node_id"]}
             
+            #Second optimize - 3 left and right empty
+            for end in range(1, len(empty_list)):
+                cur = empty_list[end]
+                prev = empty_list[end - 1]
+                
+                if prev["row"] != cur["row"] or cur["column"] - prev["column"] != 1:
+                    start = end
+
+                if end - start + 1 == 7:
+                    return {"code": 200, "data": empty_list[start + 3]["node_id"]}
+
+            #Final only found empty
+            return {"code": 200, "data": empty_list[-1]["node_id"]}
 
     async def get_optimize_outbound(self, metadata):
         warehouse_collection = get_collection("warehouse")
