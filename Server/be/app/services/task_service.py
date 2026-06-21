@@ -85,6 +85,11 @@ async def filter_raw_task(payload):
     status = task_data.get("status")
     await extract_task_by_group_id(task_data)
     await tasks_collection.insert_one(task_data)
+    
+    order_id = task_data.get("order_id")
+    if order_id in task_service._tracking_task:
+        from app.services.vcc_logic import updatePointStatus
+        await updatePointStatus(task_data, task_service._tracking_task[order_id])
 
     if status == 8 or status == 3 or status == 9 or status == 7:
         await handle_calculation(task_data.get("order_id"), task_data.get("device_num"), task_data.get("area_id"))

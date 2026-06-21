@@ -1,10 +1,12 @@
+# move_mode: to_rack, to_storage, to_test
+
 from dataclasses import asdict
 from typing import Any
 
 from shared.logging import get_logger
 from fastapi import APIRouter, HTTPException
 import os
-from app.services.vcc_logic import moveToPoint, get_possible_targets, create_new_point, get_all_points, update_point_data, updatePointStatus
+from app.services.vcc_logic import moveToPoint, get_possible_targets, create_new_point, get_all_points, update_point_data, updatePointStatus, cancel_choose_point
 from schemas.TargetPointSchema import MoveToPointSchema, PossibleTargetsResponse, StartPointSchema, PointSchema, PointUpdateSchema
 from schemas.RCSSchema import RCSStatusCode
 from app.services.vcc_service import vcc_service
@@ -14,6 +16,8 @@ from dotenv import load_dotenv
 from app.services.vcc_service import vcc_service
 
 load_dotenv()
+
+
 logger = get_logger("camera_ai_app")
 ics_url = os.getenv("ICS_URL")
 router = APIRouter()
@@ -56,6 +60,14 @@ async def find_nearest_api(body: dict[str, Any]):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/cancel_choosing")
+async def cancel_choosing_api(start: int, target: int, move_mode: str):
+    try:
+        return await cancel_choose_point(start, target, move_mode)
+    except Exception as e:
+        logger.error(f"Error cancel choosing point: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/warehouse")
 async def get_warehouse_api():
     """
@@ -71,7 +83,7 @@ async def get_warehouse_api():
 
 
 @router.post("/move-to-point")
-async def create_task(body: MoveToPointSchema):
+async def create_task(body: MoveToPointSchema, metadata: dict):
     """
     Example Payload:
     {
@@ -84,7 +96,8 @@ async def create_task(body: MoveToPointSchema):
         return await moveToPoint(
             body.start_point,
             body.target_point,
-            body.move_mode
+            body.move_mode,
+            metadata
             )
     except HTTPException:
         raise
@@ -140,7 +153,7 @@ async def update_point(point_id: int, body: PointUpdateSchema):
         return {"error": f"str{e}"}
 
 @router.post("/possible-targets")
-async def return_possible_targets(body: StartPointSchema):
+async def return_possible_targets(body: StartPointSchema, metadata: dict):
     """
     Example Payload:
     {
@@ -149,7 +162,7 @@ async def return_possible_targets(body: StartPointSchema):
     }
     """
     try:
-        result = await get_possible_targets(body.model_dump())
+        result = await get_possible_targets(body.model_dump(), metadata)
         
         if "error" in result:
             logger.error(f"Error fetching targets: {result['error']}")
